@@ -10,7 +10,9 @@ Partition Scheme: Huge App
 
 Upload
 
-Connect PC or Mobile to ESP WiFi SSID : GoPro_RC
+Connect PC or Mobile to ESP WiFi
+SSID: GoPro_RC
+Password: 00000000
 
 Open 192.168.4.1 in Browser
 
