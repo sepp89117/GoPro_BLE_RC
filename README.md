@@ -3,7 +3,9 @@ Control multiple GoPros
 
 Test phase! Function unconfirmed!
 
-<b>Steps to use</b>
+<img src="https://github.com/sepp89117/GoPro_BLE_RC/blob/main/webserver.png">
+
+<b>Steps to use</b><br>
 Set:
 - Board: ESP32 Dev Module
 - Flash Size: 4MB
@@ -27,5 +29,7 @@ TIP: The serial monitor shows a lot of information at the same time
 
 TODO:
 - find out how many cameras it works with at the same time
+  - Max tested is 3 (2022-06-24)
 - find out with which models the code works
+  - Hero 7, 8, 10 tested ok (2022-06-24)
 
