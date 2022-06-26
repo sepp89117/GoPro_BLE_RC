@@ -1,7 +1,7 @@
 # GoPro_BLE_RC
 Control multiple GoPros
 
-Test phase! Function unconfirmed!
+Due to the low memory, only a few cameras can be connected.
 
 <img src="https://github.com/sepp89117/GoPro_BLE_RC/blob/main/webserver.png">
 
