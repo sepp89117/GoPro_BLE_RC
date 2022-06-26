@@ -13,14 +13,14 @@
 #include "BLEDevice.h"
 
 /*
- * Make your personal settings here
- */
+   Make your personal settings here
+*/
 #define DEBUG // uncomment for a lot of serial output
 const char *ssid = "GoPro_RC";
 const char *password = "00000000";
 /*
- * Don't change the rest if you don't know what you're doing
- */
+   Don't change the rest if you don't know what you're doing
+*/
 
 WebServer server(80);
 
@@ -53,7 +53,7 @@ struct GoProCam
   uint32_t lastKeepAlive = 0;
   uint8_t lastCommand = 0;
   uint8_t lastError = 0;
-  String battLevel;
+  String battLevel = "na";
   char *serialNo;
   char *modelName;
   uint8_t modelID = 0;
@@ -68,6 +68,7 @@ struct GoProCam
 // Try to provide 10 cams
 const uint8_t maxCams = 10;
 GoProCam goProCams[maxCams];
+BLEScan* pBLEScan;
 uint8_t scanSeconds = 5;
 
 // The commands below are sent to pSettingsCharacteristic and responses/notifications are received on pSettingsRespCharacteristic
@@ -118,28 +119,6 @@ void sendCommand(uint8_t *command)
       goProCams[i].lastError = 3; // 3 = outstanding
     }
   }
-
-  // wait for responses
-  uint16_t timeOut = 5000; // total timeOut to wait for all cams response
-  for (uint8_t i = 0; i < maxCams; i++)
-  {
-    if (isCamAvailable(i))
-    {
-      uint32_t startWait = millis();
-      while (goProCams[i].lastError == 3)
-      {
-        if (millis() - startWait > timeOut)
-        {
-#ifdef DEBUG
-          Serial.println("[wait for responses] time out occured");
-#endif
-          break;
-        }
-        vTaskDelay(50);
-      }
-      timeOut -= millis() - startWait;
-    }
-  }
 }
 // get battery level and send keep alive
 void heartBeat(uint8_t camIndex)
@@ -178,17 +157,17 @@ bool isCamAvailable(uint8_t camIndex)
 void getCamModel(uint8_t camIndex)
 {
   // ----------- TODO -----------
-  // ID Camera Model	  Serial Number
-  // 15 HERO 6 Black	  C322~
-  // 14 HERO 5 Session	C321~
-  // 13 Fusion	        C320~
-  // 12 HERO +	        C319~
-  // 11 HERO 5 Black	  C316~
-  // 10 HERO + LCD	    C315~
-  // 9  HERO 4 Session	C314~
+  // ID Camera Model    Serial Number
+  // 15 HERO 6 Black    C322~
+  // 14 HERO 5 Session  C321~
+  // 13 Fusion          C320~
+  // 12 HERO +          C319~
+  // 11 HERO 5 Black    C316~
+  // 10 HERO + LCD      C315~
+  // 9  HERO 4 Session  C314~
   // 8  HERO 4 Silver   C313~
-  // 7  HERO 4 Black	  C312~
-  // 6  HERO (2014)	    C311~
+  // 7  HERO 4 Black    C312~
+  // 6  HERO (2014)     C311~
 
   if (goProCams[camIndex].serialNo[0] == 'C' && goProCams[camIndex].serialNo[1] == '3')
   {
@@ -200,25 +179,25 @@ void getCamModel(uint8_t camIndex)
     }
     else if (goProCams[camIndex].serialNo[2] == '4' && goProCams[camIndex].serialNo[3] == '4')
     {
-      // HERO 9 Black	  C344~
+      // HERO 9 Black   C344~
       goProCams[camIndex].modelName = (char *)"HERO 9 Black";
       goProCams[camIndex].modelID = 22;
     }
     else if (goProCams[camIndex].serialNo[2] == '3' && goProCams[camIndex].serialNo[3] == '5')
     {
-      // MAX	  C335~
+      // MAX    C335~
       goProCams[camIndex].modelName = (char *)"MAX";
       goProCams[camIndex].modelID = 21;
     }
     else if (goProCams[camIndex].serialNo[2] == '3' && goProCams[camIndex].serialNo[3] == '3')
     {
-      // HERO 8 Black	  C333~
+      // HERO 8 Black   C333~
       goProCams[camIndex].modelName = (char *)"HERO 8 Black";
       goProCams[camIndex].modelID = 20;
     }
     else if (goProCams[camIndex].serialNo[2] == '3' && goProCams[camIndex].serialNo[3] == '1')
     {
-      // HERO 7 White	  C331~
+      // HERO 7 White   C331~
       goProCams[camIndex].modelName = (char *)"HERO 7 White";
       goProCams[camIndex].modelID = 19;
     }
@@ -230,13 +209,13 @@ void getCamModel(uint8_t camIndex)
     }
     else if (goProCams[camIndex].serialNo[2] == '3')
     {
-      // HERO (2018)	  C33~
+      // HERO (2018)    C33~
       goProCams[camIndex].modelName = (char *)"HERO (2018)";
       goProCams[camIndex].modelID = 17;
     }
     else if (goProCams[camIndex].serialNo[2] == '2' && goProCams[camIndex].serialNo[3] == '8')
     {
-      // HERO 7 Black	  C328~
+      // HERO 7 Black   C328~
       goProCams[camIndex].modelName = (char *)"HERO 7 Black";
       goProCams[camIndex].modelID = 16;
     }
@@ -254,13 +233,13 @@ void getCamModel(uint8_t camIndex)
     {
       if (goProCams[camIndex].serialNo[2] == 'B')
       {
-        // HERO 3+ Black	  H3B~
+        // HERO 3+ Black    H3B~
         goProCams[camIndex].modelName = (char *)"HERO 3+ Black";
         goProCams[camIndex].modelID = 5;
       }
       else if (goProCams[camIndex].serialNo[2] == 'S')
       {
-        // HERO 3+ Silver	H3S~
+        // HERO 3+ Silver H3S~
         goProCams[camIndex].modelName = (char *)"HERO 3+ Silver";
         goProCams[camIndex].modelID = 4;
       }
@@ -271,19 +250,19 @@ void getCamModel(uint8_t camIndex)
       {
         if (goProCams[camIndex].serialNo[3] == 'B')
         {
-          // HERO 3 Black	  HD3B~
+          // HERO 3 Black   HD3B~
           goProCams[camIndex].modelName = (char *)"HERO 3 Black";
           goProCams[camIndex].modelID = 3;
         }
         else if (goProCams[camIndex].serialNo[3] == 'S')
         {
-          // HERO 3 Silver	  HD3S~
+          // HERO 3 Silver    HD3S~
           goProCams[camIndex].modelName = (char *)"HERO 3 Silver";
           goProCams[camIndex].modelID = 2;
         }
         else if (goProCams[camIndex].serialNo[3] == 'W')
         {
-          // HERO 3 White	  HD3W~
+          // HERO 3 White   HD3W~
           goProCams[camIndex].modelName = (char *)"HERO 3 White";
           goProCams[camIndex].modelID = 1;
         }
@@ -297,6 +276,12 @@ void getCamModel(uint8_t camIndex)
   }
 }
 
+void deleteCam(uint8_t camIndex){
+  delete goProCams[camIndex].pClient;
+  delete goProCams[camIndex].pDevice;
+
+  goProCams[camIndex] = GoProCam();
+}
 /*
  * Callbacks region
  */
@@ -332,10 +317,6 @@ class MySecurity : public BLESecurityCallbacks
   }
   void onAuthenticationComplete(esp_ble_auth_cmpl_t auth_cmpl)
   {
-#ifdef DEBUG
-    Serial.printf("[onAuthenticationComplete] remote BD_ADDR: %02x:%02x:%02x:%02x:%02x:%02x, ", auth_cmpl.bd_addr[0], auth_cmpl.bd_addr[1], auth_cmpl.bd_addr[2], auth_cmpl.bd_addr[3], auth_cmpl.bd_addr[4], auth_cmpl.bd_addr[5]);
-    Serial.printf("address type = %d - pairing %s\n", auth_cmpl.addr_type, auth_cmpl.success ? "success" : "fail");
-#endif
     for (uint8_t i = 0; i < maxCams; i++)
     {
       if (goProCams[i].pDevice != nullptr)
@@ -343,6 +324,10 @@ class MySecurity : public BLESecurityCallbacks
         if (goProCams[i].pDevice->getAddress().equals(auth_cmpl.bd_addr))
         {
           goProCams[i].isAuth = auth_cmpl.success;
+#ifdef DEBUG
+          Serial.printf("[onAuthenticationComplete][cam %d] remote BD_ADDR: %02x:%02x:%02x:%02x:%02x:%02x, ", i, auth_cmpl.bd_addr[0], auth_cmpl.bd_addr[1], auth_cmpl.bd_addr[2], auth_cmpl.bd_addr[3], auth_cmpl.bd_addr[4], auth_cmpl.bd_addr[5]);
+          Serial.printf("address type = %d - pairing %s\n", auth_cmpl.addr_type, goProCams[i].isAuth ? "success" : "fail");
+#endif
         }
       }
     }
@@ -364,9 +349,10 @@ class MyClientCallback : public BLEClientCallbacks
       {
         if (goProCams[i].pClient->getPeerAddress().equals(pClient->getPeerAddress()))
         { // TODO Check if this works
-          goProCams[i].isConnected = false;
-          goProCams[i].pClient = nullptr;
-          goProCams[i].pDevice = nullptr;
+//          goProCams[i].isConnected = false;
+//          goProCams[i].pClient = nullptr;
+//          goProCams[i].pDevice = nullptr;
+          deleteCam(i);
 #ifdef DEBUG
           Serial.printf("[onDisconnect] %s\n", pClient->getPeerAddress().toString().c_str());
 #endif
@@ -374,55 +360,6 @@ class MyClientCallback : public BLEClientCallbacks
         }
       }
     }
-  }
-};
-
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
-{
-  void onResult(BLEAdvertisedDevice advertisedDevice)
-  {
-    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(controlServiceUUID))
-    {
-      // check if cam is already connected
-      for (uint8_t i = 0; i < maxCams; i++)
-      {
-        if (goProCams[i].pDevice != nullptr)
-        {
-          if (goProCams[i].pDevice->getAddress().equals(advertisedDevice.getAddress()))
-          {
-            // already connected
-            return;
-          }
-        }
-      }
-      bool spaceEnough = false;
-      for (uint8_t i = 0; i < maxCams; i++)
-      {
-        if (goProCams[i].pDevice == nullptr)
-        {
-          goProCams[i].pDevice = new BLEAdvertisedDevice(advertisedDevice);
-          goProCams[i].toConnect = true;
-          spaceEnough = true;
-#ifdef DEBUG
-          Serial.printf("[onAdvertiseResult] %d toConnect-> ", i);
-          Serial.println(advertisedDevice.toString().c_str());
-#endif
-          break;
-        }
-      }
-#ifdef DEBUG
-      if (!spaceEnough)
-        Serial.println("[maxCams overflow] Last camera could not be connected!");
-#endif
-    }
-#ifdef DEBUG
-    else if (!advertisedDevice.isAdvertisingService(controlServiceUUID))
-    {
-      Serial.print("[onAdvertiseResult] Advertised device ");
-      Serial.print(advertisedDevice.getAddress().toString().c_str());
-      Serial.println(" is not advertising service FEA6 and will not be connected! Is it a GoPro? Tell the author!");
-    }
-#endif
   }
 };
 
@@ -495,8 +432,8 @@ void initServer()
 
   server.on("/pair", HTTP_GET, []()
             {
-    Serial.println("Start BLEDevice scan");
-    BLEDevice::getScan()->start(scanSeconds);
+    Serial.println("Starting again BLE server scan...");
+    pBLEScan->start(scanSeconds, &scanCompleteCB);
     server.send(200, "text/plain", "OK"); });
 
   server.on("/shutterOn", HTTP_GET, []()
@@ -650,7 +587,7 @@ void initServer()
 bool connectToCam(uint8_t camIndex)
 {
 #ifdef DEBUG
-  Serial.printf("[connectToCam] connecting %s ...\n", goProCams[camIndex].pDevice->getAddress().toString().c_str());
+  Serial.printf("[connectToCam][cam %d] Connecting %s ...\n", camIndex, goProCams[camIndex].pDevice->toString().c_str());
 #endif
   // Set security
   BLEDevice::setEncryptionLevel(ESP_BLE_SEC_ENCRYPT);
@@ -660,54 +597,28 @@ bool connectToCam(uint8_t camIndex)
   pSecurity->setCapability(ESP_IO_CAP_NONE);                 // ESP_IO_CAP_OUT
   pSecurity->setRespEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
 
-#ifdef DEBUG
-  Serial.printf("[connectToCam] createClient\n");
-#endif
-
   // Create client
+  //if (goProCams[camIndex].pClient == nullptr)
   goProCams[camIndex].pClient = BLEDevice::createClient();
   goProCams[camIndex].pClient->setClientCallbacks(new MyClientCallback());
-
-#ifdef DEBUG
-  Serial.printf("[connectToCam] Connect to the remote BLE Server\n");
-#endif
 
   // Connect to the remote BLE Server. <- this requests authentication
   if (!goProCams[camIndex].pClient->connect(goProCams[camIndex].pDevice))
   {
 #ifdef DEBUG
-    Serial.printf("[connectToCam] pClient->connect failed\n");
+    Serial.printf("[connectToCam][cam %d] pClient->connect failed\n", camIndex);
 #endif
     return false;
   }
-#ifdef DEBUG
-  Serial.printf("[connectToCam] wait for authentication\n");
-#endif
-
-  // wait for authentication -> timeout is 5 seconds (< 2 s measured)
-  uint32_t startWait = millis();
-  while (!goProCams[camIndex].isAuth)
-  {
-    delay(2);
-    if (millis() - startWait > 5000)
-    {
-#ifdef DEBUG
-      Serial.printf("[connectToCam] no authentication response\n");
-#endif
-      return false;
-    }
-  }
 
 #ifdef DEBUG
-  Serial.printf("[connectToCam] get pRemoteService\n");
+  Serial.printf("[connectToCam][cam %d] get pRemoteService...\n", camIndex);
 #endif
-
   // Obtain a reference to the service we are after in the remote BLE server.
   //[BUG] Stack canary watchpoint triggered (btController) with ESP32 Version 2.0.3
   BLERemoteService *pRemoteService = goProCams[camIndex].pClient->getService(controlServiceUUID);
-
 #ifdef DEBUG
-  Serial.printf("[connectToCam] check pRemoteService\n");
+  Serial.printf("[connectToCam][cam %d] got pRemoteService!\n", camIndex);
 #endif
 
   if (pRemoteService == nullptr)
@@ -720,9 +631,8 @@ bool connectToCam(uint8_t camIndex)
   }
 
 #ifdef DEBUG
-  Serial.printf("[connectToCam] get Characteristics\n");
+  Serial.printf("[connectToCam][cam %d] get Characteristics...\n", camIndex);
 #endif
-
   // Obtain a reference to the characteristic in the service of the remote BLE server.
   goProCams[camIndex].pCommandCharacteristic = goProCams[camIndex].pClient->getService(controlServiceUUID)->getCharacteristic(commandUUID);
   goProCams[camIndex].pCommandRespCharacteristic = goProCams[camIndex].pClient->getService(controlServiceUUID)->getCharacteristic(commandRespUUID);
@@ -731,8 +641,9 @@ bool connectToCam(uint8_t camIndex)
   goProCams[camIndex].pSerialNoCharacteristic = goProCams[camIndex].pClient->getService(defInfoUUID)->getCharacteristic(serialNoUUID);
   goProCams[camIndex].pBattLevelCharacteristic = goProCams[camIndex].pClient->getService(battInfoUUID)->getCharacteristic(battLevelUUID);
 #ifdef DEBUG
-  Serial.printf("[connectToCam] check Characteristics\n");
+  Serial.printf("[connectToCam][cam %d] got Characteristics!\n", camIndex);
 #endif
+
   if (goProCams[camIndex].pCommandCharacteristic == nullptr ||
       goProCams[camIndex].pCommandRespCharacteristic == nullptr ||
       goProCams[camIndex].pSettingsCharacteristic == nullptr ||
@@ -746,9 +657,6 @@ bool connectToCam(uint8_t camIndex)
     return false;
   }
 
-#ifdef DEBUG
-  Serial.printf("[connectToCam] check Characteristics canNotify\n");
-#endif
   if (!goProCams[camIndex].pCommandRespCharacteristic->canNotify() ||
       !goProCams[camIndex].pSettingsRespCharacteristic->canNotify())
   {
@@ -758,16 +666,10 @@ bool connectToCam(uint8_t camIndex)
     return false;
   }
 
-#ifdef DEBUG
-  Serial.printf("[connectToCam] Notify Characteristics\n");
-#endif
   // notify characteristics
   goProCams[camIndex].pCommandRespCharacteristic->registerForNotify(notifyCallback);
   goProCams[camIndex].pSettingsRespCharacteristic->registerForNotify(notifyCallback);
 
-#ifdef DEBUG
-  Serial.printf("[connectToCam] Read Characteristics\n");
-#endif
   // read characteristics
   if (goProCams[camIndex].pSerialNoCharacteristic->canRead())
   {
@@ -776,35 +678,92 @@ bool connectToCam(uint8_t camIndex)
     getCamModel(camIndex);
 
 #ifdef DEBUG
-    Serial.printf("[connectToCam] GoPro Model: %s; Serial Number: %s, Model ID: %d\n", goProCams[camIndex].modelName, goProCams[camIndex].serialNo, goProCams[camIndex].modelID);
+    Serial.printf("[connectToCam][cam %d] Model: %s; Serial Number: %s, Model ID: %d\n", camIndex, goProCams[camIndex].modelName, goProCams[camIndex].serialNo, goProCams[camIndex].modelID);
 #endif
   }
   else
   {
 #ifdef DEBUG
-    Serial.printf("[connectToCam] Can not read Serial Number\n");
+    Serial.printf("[connectToCam][cam %d] Can not read Serial Number\n", camIndex);
 #endif
   }
   if (goProCams[camIndex].pBattLevelCharacteristic->canRead())
   {
     const char *value = goProCams[camIndex].pBattLevelCharacteristic->readValue().c_str();
     goProCams[camIndex].battLevel = String(value[0], DEC);
-#ifdef DEBUG
-    Serial.printf("[connectToCam] Retrieved Battery Level: %s %\n", goProCams[camIndex].battLevel);
-#endif
   }
   else
   {
 #ifdef DEBUG
-    Serial.printf("[connectToCam] Can not read Battery Level\n");
+    Serial.printf("[connectToCam][cam %d] Can not read Battery Level\n", camIndex);
 #endif
   }
 
   goProCams[camIndex].lastKeepAlive = millis();
 #ifdef DEBUG
-  Serial.printf("[connectToCam] successfuly connected %s\n", goProCams[camIndex].pDevice->getAddress().toString().c_str());
+  Serial.printf("[connectToCam][cam %d] Successfuly connected %s\n", camIndex, goProCams[camIndex].pDevice->getAddress().toString().c_str());
 #endif
   return true;
+}
+
+static void scanCompleteCB(BLEScanResults scanResults)
+{
+#ifdef DEBUG
+          Serial.printf("[scanCompleteCB] %d devices advertised...\n", scanResults.getCount());
+#endif
+
+  for(int ai = 0; ai < scanResults.getCount(); ai++) {
+    if (scanResults.getDevice(ai).haveServiceUUID() && scanResults.getDevice(ai).isAdvertisingService(controlServiceUUID))
+    {
+      bool alreadyConnected = false;
+      // check if cam is already connected
+      for (uint8_t i = 0; i < maxCams; i++)
+      {
+        if (goProCams[i].pDevice != nullptr)
+        {
+          if (goProCams[i].pDevice->getAddress().equals(scanResults.getDevice(ai).getAddress()))
+          {
+            // already connected
+#ifdef DEBUG
+          Serial.printf("[scanCompleteCB][dev %d] %s is already connected.\n", ai, goProCams[i].pDevice->getAddress().toString().c_str());
+#endif
+            alreadyConnected = true;
+          }
+        }
+      }
+      if(!alreadyConnected){
+        bool spaceEnough = false;
+        for (uint8_t i = 0; i < maxCams; i++)
+        {
+          if (goProCams[i].pDevice == nullptr)
+          {
+            goProCams[i].pDevice = new BLEAdvertisedDevice(scanResults.getDevice(ai));
+            goProCams[i].toConnect = true;
+            spaceEnough = true;
+#ifdef DEBUG
+            Serial.printf("[scanCompleteCB][dev %d] toConnect-> %s\n", ai, goProCams[i].pDevice->toString().c_str());
+#endif
+            break;
+          }
+        }
+#ifdef DEBUG
+        if (!spaceEnough)
+          Serial.println("[scanCompleteCB] maxCams overflow! Last camera could not be connected!");
+#endif
+      }
+    }
+#ifdef DEBUG
+    else if (!scanResults.getDevice(ai).isAdvertisingService(controlServiceUUID))
+    {
+      Serial.printf("[scanCompleteCB][dev %d] Advertised device ", ai);
+      Serial.print(scanResults.getDevice(ai).getAddress().toString().c_str());
+      Serial.println(" does not provide service FEA6 and will not be connected! Is it a GoPro? Tell the author!");
+    }
+    
+#endif
+  }
+
+  pBLEScan->clearResults();
 }
 
 void setup()
@@ -820,19 +779,17 @@ void setup()
   Serial.println("Starting HTTP server");
   initServer();
 
-  Serial.println("Starting Arduino BLE Client application...");
+  Serial.println("Starting BLE server scan...");
   BLEDevice::init(ssid);
-  BLEScan *pBLEScan = BLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  pBLEScan = BLEDevice::getScan();
   pBLEScan->setActiveScan(true);
-  pBLEScan->start(scanSeconds);
+  pBLEScan->start(scanSeconds, &scanCompleteCB);
 }
 
 void loop()
 {
-  BLEDevice::getScan()->stop();
   server.handleClient();
-  vTaskDelay(2); // allow the cpu to switch to other tasks
+  delay(2); // allow the cpu to switch to other tasks
 
   for (uint8_t i = 0; i < maxCams; i++)
   {
@@ -840,33 +797,32 @@ void loop()
     {
       if (goProCams[i].toConnect)
       {
-        BLEDevice::getScan()->stop();
-
         if (connectToCam(i))
           goProCams[i].isConnected = true;
         else
         {
 #ifdef DEBUG
-          Serial.printf("[connectToCam] connecting failed %s\n", goProCams[i].pDevice->getAddress().toString().c_str());
+          Serial.printf("[connectToCam][cam %d] connecting failed %s\n", i, goProCams[i].pDevice->getAddress().toString().c_str());
 #endif
-          if (goProCams[i].pClient != nullptr)
-          {
-            if (goProCams[i].pClient->isConnected())
-              goProCams[i].pClient->disconnect();
-            goProCams[i].pClient = nullptr;
-          }
-          goProCams[i].pDevice = nullptr;
-          goProCams[i].isConnected = false;
+            deleteCam(i);
+//          if (goProCams[i].pClient != nullptr)
+//          {
+//            if (goProCams[i].pClient->isConnected())
+//              goProCams[i].pClient->disconnect();
+//              goProCams[i].pClient = nullptr;
+//          }
+//          goProCams[i].pDevice = nullptr;
+//          goProCams[i].isConnected = false;
         }
         goProCams[i].toConnect = false;
       }
 
-      // It is recommended to send a keep-alive at least once every 120 seconds. We choose 60 seconds
+      // For Hero 9 and 10 it is recommended to send a keep-alive at least once every 120 seconds. We choose 60 seconds
       if (millis() - goProCams[i].lastKeepAlive > 60000)
       {
         heartBeat(i);
 #ifdef DEBUG
-        Serial.printf("[keepAlive] was sent to Cam %d\n", i);
+        Serial.printf("[heartBeat] -> was sent to Cam %d\n", i);
 #endif
       }
     }
