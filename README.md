@@ -2,6 +2,7 @@
 Control multiple GoPros
 
 Due to the low memory, only a few cameras can be connected.
+Better solution is here: https://github.com/sepp89117/GoPro_Web_RC
 
 <img src="https://github.com/sepp89117/GoPro_BLE_RC/blob/main/webserver.png">
 
